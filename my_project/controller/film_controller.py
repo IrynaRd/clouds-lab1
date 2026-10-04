@@ -1,0 +1,89 @@
+from flask import Blueprint, request, jsonify
+from pydantic import ValidationError
+from sqlalchemy.orm import Session
+from my_project.database import get_db
+from my_project.service import film_service
+from my_project.service.film_service import FilmNotFoundException, FilmExistsException
+from my_project.domain.schemas import FilmCreate, FilmUpdate, FilmResponse, ReviewResponse
+
+film_bp = Blueprint('films', __name__, url_prefix='/films')
+
+def with_db_session(f):
+    def wrapper(*args, **kwargs):
+        db = next(get_db())
+        try:
+            return f(db, *args, **kwargs)
+        finally:
+            db.close()
+    wrapper.__name__ = f.__name__
+    return wrapper
+
+@film_bp.route('/', methods=['POST'])
+@with_db_session
+def create_film_endpoint(db: Session):
+    try:
+        film_schema = FilmCreate.model_validate(request.json)
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
+    
+    try:
+        new_film = film_service.create_new_film(db, film_schema)
+        return jsonify(FilmResponse.model_validate(new_film).model_dump()), 201
+    except FilmExistsException as error:
+        return jsonify({"error": str(error)}), 409
+
+@film_bp.route('/', methods=['GET'])
+@with_db_session
+def get_films_endpoint(db: Session):
+    films = film_service.get_all_films_service(db, 0, 100)
+    response_data = [FilmResponse.model_validate(f).model_dump() for f in films]
+    return jsonify(response_data), 200
+
+@film_bp.route('/<int:film_id>', methods=['GET'])
+@with_db_session
+def get_film_endpoint(db: Session, film_id: int):
+    try:
+        film = film_service.get_film_by_id(db, film_id)
+        return jsonify(FilmResponse.model_validate(film).model_dump()), 200
+    except FilmNotFoundException as e:
+        return jsonify({"error": str(e)}), 404
+
+@film_bp.route('/<int:film_id>', methods=['PUT'])
+@with_db_session
+def update_film_endpoint(db: Session, film_id: int):
+    try:
+        film_update_schema = FilmUpdate.model_validate(request.json)
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
+        
+    try:
+        updated_film = film_service.update_existing_film(db, film_id, film_update_schema)
+        return jsonify(FilmResponse.model_validate(updated_film).model_dump()), 200
+    except FilmNotFoundException as e:
+        return jsonify({"error": str(e)}), 404
+
+@film_bp.route('/<int:film_id>', methods=['DELETE'])
+@with_db_session
+def delete_film_endpoint(db: Session, film_id: int):
+    try:
+        film_service.delete_existing_film(db, film_id)
+        return jsonify({"message": "film deleted"}), 200
+    except FilmNotFoundException as e:
+        return jsonify({"error": str(e)}), 404
+
+@film_bp.route('/<int:film_id>/reviews', methods=['GET'])
+@with_db_session
+def get_film_reviews_endpoint(db: Session, film_id: int):
+    
+    """всі рецензії для одного фільму"""
+    
+    try:
+        film_with_reviews = film_service.get_film_reviews_service(db, film_id)
+        reviews_data = [
+            ReviewResponse.model_validate(review).model_dump() 
+            for review in film_with_reviews.reviews
+        ]
+        return jsonify(reviews_data), 200
+    
+    except FilmNotFoundException as e:
+        return jsonify({"error": str(e)}), 404
