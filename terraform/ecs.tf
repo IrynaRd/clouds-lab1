@@ -28,9 +28,22 @@ resource "aws_ecs_task_definition" "app_task" {
           value = "mysql+pymysql://${var.db_user}:${var.db_password}@${aws_db_instance.api_imdb.endpoint}/${aws_db_instance.api_imdb.db_name}"
         }
       ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = "/ecs/app"
+          "awslogs-region"        = "eu-central-1"
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
     }
   ])
 
+}
+
+resource "aws_cloudwatch_log_group" "ecs_log_group" {
+  name              = "/ecs/app"
+  retention_in_days = 7
 }
 
 resource "aws_ecs_service" "app_service" {
