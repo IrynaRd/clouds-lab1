@@ -36,7 +36,7 @@ resource "aws_iam_role" "github_actions_role" {
         Condition= {
           StringEquals= {
             "token.actions.githubusercontent.com:aud"= "sts.amazonaws.com",
-            "token.actions.githubusercontent.com:sub"= "repo:IrynaRd@181106680/clouds-lab1@1404682570:ref:refs/heads/main"
+            "token.actions.githubusercontent.com:sub"= "repo:IrynaRd/clouds-lab1:ref:refs/heads/main"
           }
         }
       }
@@ -86,7 +86,8 @@ resource "aws_iam_policy" "github_ecs_policy" {
           Sid ="RegisterTaskDefinition",
           Effect ="Allow",
           Action =[
-            "ecs:RegisterTaskDefinition"
+            "ecs:RegisterTaskDefinition",
+            "ecs:DescribeTaskDefinition"
          ],
           Resource ="*"
       },
