@@ -22,6 +22,77 @@ def with_db_session(f):
 @film_bp.route('/', methods=['POST'])
 @with_db_session
 def create_film_endpoint(db: Session):
+    """
+    Create a new film
+    ---
+    tags:
+      - Films
+    parameters:
+      - in: body
+        name: body
+        required: true
+        description: Film details
+        schema:
+          type: object
+          required:
+            - title
+            - year
+            - description
+            - budget
+          properties:
+            title:
+              type: string
+              example: "Film"
+            year:
+              type: integer
+              example: 2010
+            description:
+              type: string
+              example: "Film about ..."
+            budget:
+              type: number
+              format: double
+              example: 16045568789.00
+    responses:
+      200:
+        description: Film successfully created
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            title:
+              type: string
+              example: "Film"
+            year:
+              type: integer
+              example: 2010
+            description:
+              type: string
+              example: "Film about .."
+            budget:
+              type: number
+              format: double
+              example: 16045568789.00
+      400:
+        description: Input data validation error
+        schema:
+          type: object
+          properties:
+            error:
+              type: array
+              items:
+                type: object
+      409:
+        description: Film already exists
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "exists"
+    """
     try:
         film_schema = FilmCreate.model_validate(request.json)
     except ValidationError as e:
