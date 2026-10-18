@@ -15,7 +15,7 @@ def get_all_users(db, skip = 0, limit = 100):
     return db.scalars(query).all()
 
 def create_user(db, user_schema):
-    user_data = user_schema.model_dump()
+    user_data = user_schema.model_dump(exclude={'human_id'})
     db_user = User(**user_data)
     
     db.add(db_user)

@@ -35,15 +35,23 @@ def create_user_endpoint(db: Session):
         schema:
           type: object
           required:
-            - username
+            - nick_name
             - email
+            - registration_date
           properties:
-            username:
+            nick_name:
               type: string
               example: "user"
             email:
               type: string
               example: "user@gmail.com"
+            registration_date:
+              type: string
+              format: date
+              example: "2026-10-15"
+            human_id:
+              type: integer
+              example: 1
     responses:
       200:
         description: Successfully created
@@ -52,12 +60,15 @@ def create_user_endpoint(db: Session):
           properties:
             id:
               type: integer
-            username:
+            nick_name:
               type: string
             email:
               type: string
+            registration_date:
+              type: string
+              format: date
       400:
-        description: validation error
+        description: Validation error
         schema:
           type: object
           properties:

@@ -34,7 +34,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     registration_date: date
-    human_id: int
+    human_id: Optional[int] = None
 
 class UserUpdate(BaseModel):
     nick_name: Optional[str] = None
