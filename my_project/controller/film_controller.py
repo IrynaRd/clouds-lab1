@@ -52,7 +52,7 @@ def create_film_endpoint(db: Session):
             budget:
               type: number
               format: double
-              example: 16045568789.00
+              example: 160455.00
     responses:
       200:
         description: Film successfully created
