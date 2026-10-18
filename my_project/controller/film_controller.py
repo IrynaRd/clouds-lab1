@@ -5,17 +5,18 @@ from my_project.database import get_db
 from my_project.service import film_service
 from my_project.service.film_service import FilmNotFoundException, FilmExistsException
 from my_project.domain.schemas import FilmCreate, FilmUpdate, FilmResponse, ReviewResponse
+from functools import wraps
 
 film_bp = Blueprint('films', __name__, url_prefix='/films')
 
 def with_db_session(f):
+    @wraps(f)
     def wrapper(*args, **kwargs):
         db = next(get_db())
         try:
             return f(db, *args, **kwargs)
         finally:
             db.close()
-    wrapper.__name__ = f.__name__
     return wrapper
 
 @film_bp.route('/', methods=['POST'])
