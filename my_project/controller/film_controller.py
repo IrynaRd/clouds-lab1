@@ -35,6 +35,30 @@ def create_film_endpoint(db: Session):
 @film_bp.route('/', methods=['GET'])
 @with_db_session
 def get_films_endpoint(db: Session):
+    """
+    Get films array
+    ---
+    tags:
+      - Films
+    responses:
+      200:
+        description: Films array
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              title:
+                type: string
+              year:
+                type: integer
+              description:
+                type: string
+              budget:
+                type: number
+    """
     films = film_service.get_all_films_service(db, 0, 100)
     response_data = [FilmResponse.model_validate(f).model_dump() for f in films]
     return jsonify(response_data), 200
@@ -42,6 +66,41 @@ def get_films_endpoint(db: Session):
 @film_bp.route('/<int:film_id>', methods=['GET'])
 @with_db_session
 def get_film_endpoint(db: Session, film_id: int):
+    """
+    Get a movie by ID
+    ---
+    tags:
+      - Films
+    parameters:
+      - in: path
+        name: film_id
+        type: integer
+        required: true
+        description: Film ID
+    responses:
+      200:
+        description: Film details
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+            title:
+              type: string
+            year:
+              type: integer
+            description:
+              type: string
+            budget:
+              type: number
+      404:
+        description: Film not found
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     try:
         film = film_service.get_film_by_id(db, film_id)
         return jsonify(FilmResponse.model_validate(film).model_dump()), 200
@@ -51,6 +110,69 @@ def get_film_endpoint(db: Session, film_id: int):
 @film_bp.route('/<int:film_id>', methods=['PUT'])
 @with_db_session
 def update_film_endpoint(db: Session, film_id: int):
+    """
+    Update film data by ID
+    ---
+    tags:
+      - Films
+    parameters:
+      - in: path
+        name: film_id
+        type: integer
+        required: true
+        description: Film ID
+      - in: body
+        name: body
+        required: true
+        description: Fields to update (all optional)
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+              example: "Updated title"
+            year:
+              type: integer
+              example: 2023
+            description:
+              type: string
+              example: "Updated description"
+            budget:
+              type: number
+              example: 200000000.00
+    responses:
+      200:
+        description: Film successfully updated
+        schema:
+          type: object
+          properties:
+            id:
+              type: integer
+            title:
+              type: string
+            year:
+              type: integer
+            description:
+              type: string
+            budget:
+              type: number
+      400:
+        description: Input data validation error
+        schema:
+          type: object
+          properties:
+            error:
+              type: array
+              items:
+                type: object
+      404:
+        description: Film not found
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     try:
         film_update_schema = FilmUpdate.model_validate(request.json)
     except ValidationError as e:
@@ -65,6 +187,34 @@ def update_film_endpoint(db: Session, film_id: int):
 @film_bp.route('/<int:film_id>', methods=['DELETE'])
 @with_db_session
 def delete_film_endpoint(db: Session, film_id: int):
+    """
+    Delete film by ID
+    ---
+    tags:
+      - Films
+    parameters:
+      - in: path
+        name: film_id
+        type: integer
+        required: true
+        description: Film ID
+    responses:
+      200:
+        description: Film successfully deleted
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "film deleted"
+      404:
+        description: Film not found
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+    """
     try:
         film_service.delete_existing_film(db, film_id)
         return jsonify({"message": "film deleted"}), 200

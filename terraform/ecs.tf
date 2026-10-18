@@ -26,6 +26,10 @@ resource "aws_ecs_task_definition" "app_task" {
         {
           name  = "DATABASE_URL"
           value = "mysql+pymysql://${var.db_user}:${var.db_password}@${aws_db_instance.api_imdb.endpoint}/${aws_db_instance.api_imdb.db_name}"
+        },
+        {
+          name  = "JWT_SECRET_KEY"
+          value = "${var.jwt_secret_key}"
         }
       ]
       logConfiguration = {

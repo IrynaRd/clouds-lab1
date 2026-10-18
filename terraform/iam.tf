@@ -29,11 +29,11 @@ resource "aws_iam_role" "github_actions_role" {
     Statement = [
       {
         Effect = "Allow",
-        Principal= {
+        Principal = {
           Federated = aws_iam_openid_connect_provider.github_actions_oidc_provider.arn
         },
-        Action= "sts:AssumeRoleWithWebIdentity",
-        Condition= {
+        Action = "sts:AssumeRoleWithWebIdentity",
+        Condition = {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           },
@@ -52,23 +52,23 @@ resource "aws_iam_policy" "github_ecr_policy" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
-        {
-            Effect = "Allow",
-            Action = [
-                "ecr:CompleteLayerUpload",
-                "ecr:UploadLayerPart",
-                "ecr:InitiateLayerUpload",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:PutImage",
-                "ecr:BatchGetImage"
-            ],
-            Resource = aws_ecr_repository.api.arn
-        },
-        {
-            Effect = "Allow",
-            Action = "ecr:GetAuthorizationToken",
-            Resource = "*"
-        }
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:CompleteLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:InitiateLayerUpload",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:PutImage",
+          "ecr:BatchGetImage"
+        ],
+        Resource = aws_ecr_repository.api.arn
+      },
+      {
+        Effect   = "Allow",
+        Action   = "ecr:GetAuthorizationToken",
+        Resource = "*"
+      }
     ]
 
   })
@@ -82,39 +82,39 @@ resource "aws_iam_role_policy_attachment" "github_ecr_policy_attachment" {
 resource "aws_iam_policy" "github_ecs_policy" {
   name = "github-ecs-policy"
   policy = jsonencode({
-    Version ="2012-10-17",
-    Statement =[
+    Version = "2012-10-17",
+    Statement = [
       {
-          Sid ="RegisterTaskDefinition",
-          Effect ="Allow",
-          Action =[
-            "ecs:RegisterTaskDefinition",
-            "ecs:DescribeTaskDefinition"
-         ],
-          Resource ="*"
+        Sid    = "RegisterTaskDefinition",
+        Effect = "Allow",
+        Action = [
+          "ecs:RegisterTaskDefinition",
+          "ecs:DescribeTaskDefinition"
+        ],
+        Resource = "*"
       },
       {
-          Sid ="PassRolesInTaskDefinition",
-          Effect ="Allow",
-          Action =[
-            "iam:PassRole"
-         ],
-          Resource =[
-            aws_iam_role.ecs_task_execution_role.arn
-         ]
+        Sid    = "PassRolesInTaskDefinition",
+        Effect = "Allow",
+        Action = [
+          "iam:PassRole"
+        ],
+        Resource = [
+          aws_iam_role.ecs_task_execution_role.arn
+        ]
       },
       {
-          Sid ="DeployService",
-          Effect ="Allow",
-          Action =[
-            "ecs:UpdateService",
-            "ecs:DescribeServices"
-         ],
-          Resource =[
-            aws_ecs_service.app_service.id
-         ]
+        Sid    = "DeployService",
+        Effect = "Allow",
+        Action = [
+          "ecs:UpdateService",
+          "ecs:DescribeServices"
+        ],
+        Resource = [
+          aws_ecs_service.app_service.id
+        ]
       }
-   ]
+    ]
   })
 }
 
