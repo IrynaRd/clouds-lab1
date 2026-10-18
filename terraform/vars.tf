@@ -21,6 +21,12 @@ variable "jwt_secret_key" {
   sensitive   = true
 }
 
+variable "app_password" {
+  description = "app password"
+  type        = string
+  sensitive   = true
+}
+
 variable "alert_email" {
   description = "alert email"
   type        = string

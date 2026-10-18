@@ -1,3 +1,4 @@
+from flask_jwt_extended import jwt_required
 from flask import Blueprint, request, jsonify
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
@@ -164,6 +165,7 @@ def get_user_endpoint(db: Session, user_id: int):
 
 @user_bp.route('/<int:user_id>', methods=['PUT'])
 @with_db_session
+@jwt_required()
 def update_user_endpoint(db: Session, user_id: int):
     """
     Update user by ID
@@ -231,6 +233,7 @@ def update_user_endpoint(db: Session, user_id: int):
 
 @user_bp.route('/<int:user_id>', methods=['DELETE'])
 @with_db_session
+@jwt_required()
 def delete_user_endpoint(db: Session, user_id: int):
     """
     Delete user by ID

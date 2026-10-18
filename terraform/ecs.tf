@@ -30,6 +30,10 @@ resource "aws_ecs_task_definition" "app_task" {
         {
           name  = "JWT_SECRET_KEY"
           value = "${var.jwt_secret_key}"
+        },
+        {
+          name  = "APP_PASSWORD"
+          value = "${var.app_password}"
         }
       ]
       logConfiguration = {
