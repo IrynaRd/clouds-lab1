@@ -5,17 +5,18 @@ from my_project.database import get_db
 from my_project.service import user_service
 from my_project.service.user_service import UserNotFoundException, UserExistsException
 from my_project.domain.schemas import UserCreate, UserUpdate, UserResponse, ReviewResponse
+from functools import wraps
 
 user_bp = Blueprint('users', __name__, url_prefix='/users')
 
 def with_db_session(f):
+    @wraps(f)
     def wrapper(*args, **kwargs):
         db = next(get_db())
         try:
             return f(db, *args, **kwargs)
         finally:
             db.close()
-    wrapper.__name__ = f.__name__
     return wrapper
 
 @user_bp.route('/', methods=['POST'])
