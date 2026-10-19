@@ -12,6 +12,7 @@ REST API застосунок для роботи з фільмами та ко�
 
 ## Структура проєкту
 
+```text
 databases-labs/
 ├── .github/
 │   └── workflows/
@@ -59,3 +60,4 @@ databases-labs/
 ├── .gitignore
 ├── .dockerignore
 └── README.md
+```
