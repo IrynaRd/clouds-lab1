@@ -4,11 +4,11 @@
 
 REST API застосунок для роботи з фільмами та користувачами на Flask із базою даних MySQL.
 
-- **Swagger UI** — `http://app-load-balancer-2044497436.eu-central-1.elb.amazonaws.com/apidocs`
+- **Swagger UI** — `http://app-load-balancer-105476553.eu-central-1.elb.amazonaws.com/apidocs`
 
 ## Публічна адреса
 
-`http://app-load-balancer-2044497436.eu-central-1.elb.amazonaws.com`
+`http://app-load-balancer-105476553.eu-central-1.elb.amazonaws.com`
 
 ## Структура проєкту
 
