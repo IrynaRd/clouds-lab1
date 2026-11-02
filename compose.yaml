@@ -5,6 +5,8 @@ services:
       - "5000:5000"
     environment:
       DATABASE_URL: mysql+pymysql://${DB_USER}:${DB_PASSWORD}@db:3306/imdb
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      APP_PASSWORD: ${APP_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
