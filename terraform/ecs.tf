@@ -1,5 +1,10 @@
 resource "aws_ecs_cluster" "app_cluster" {
   name = "app-cluster"
+
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 }
 
 resource "aws_ecs_task_definition" "app_task" {
@@ -71,5 +76,42 @@ resource "aws_ecs_service" "app_service" {
     target_group_arn = aws_lb_target_group.app_tg.arn
     container_name   = "api-container"
     container_port   = 5000
+  }
+
+  lifecycle {
+    ignore_changes = [
+      task_definition,
+      desired_count
+    ]
+  }
+}
+
+
+resource "aws_appautoscaling_target" "ecs_target" {
+  min_capacity = 1
+  max_capacity = 3
+
+  resource_id = "service/${aws_ecs_cluster.app_cluster.name}/${aws_ecs_service.app_service.name}"
+
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
+  name               = "ecs-cpu-autoscaling-policy"
+  policy_type        = "TargetTrackingScaling"
+
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+
+    target_value       = 60.0
+    scale_out_cooldown = 60
+    scale_in_cooldown  = 180
   }
 }
