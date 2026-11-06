@@ -8,9 +8,11 @@ export const options = {
     { duration: '5m', target: 40 },
     { duration: '3m', target: 0 },
   ],
+
+  summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const BASE_URL = "http://...";
+const BASE_URL = "http://app-load-balancer-1318946727.eu-central-1.elb.amazonaws.com";
 
 export function setup() {
   const params = {
