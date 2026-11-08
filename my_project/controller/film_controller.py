@@ -132,6 +132,9 @@ def get_films_endpoint(db: Session):
                 type: number
     """
     films = film_service.get_all_films_service(db, 0, 100)
+    if films and isinstance(films[0], dict):
+      return jsonify(films), 200
+    
     response_data = [FilmResponse.model_validate(f).model_dump() for f in films]
     return jsonify(response_data), 200
 

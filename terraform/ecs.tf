@@ -33,6 +33,18 @@ resource "aws_ecs_task_definition" "app_task" {
           value = "mysql+pymysql://${var.db_user}:${var.db_password}@${aws_db_instance.api_imdb.endpoint}/${aws_db_instance.api_imdb.db_name}"
         },
         {
+          name  = "REDIS_URL"
+          value = "redis://${aws_elasticache_cluster.redis_cluster.cache_nodes[0].address}:${aws_elasticache_cluster.redis_cluster.cache_nodes[0].port}/0"
+        },
+        {
+          name  = "CACHE_ENABLED"
+          value = "${var.cache_enabled}"
+        },
+        {
+          name  = "CACHE_TTL"
+          value = "${var.cache_ttl}"
+        },
+        {
           name  = "JWT_SECRET_KEY"
           value = "${var.jwt_secret_key}"
         },
@@ -98,8 +110,8 @@ resource "aws_appautoscaling_target" "ecs_target" {
 }
 
 resource "aws_appautoscaling_policy" "ecs_cpu_policy" {
-  name               = "ecs-cpu-autoscaling-policy"
-  policy_type        = "TargetTrackingScaling"
+  name        = "ecs-cpu-autoscaling-policy"
+  policy_type = "TargetTrackingScaling"
 
   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension

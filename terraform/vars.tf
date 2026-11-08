@@ -32,3 +32,15 @@ variable "alert_email" {
   type        = string
   sensitive   = true
 }
+
+variable "cache_enabled" {
+  description = "cache enabled bool string"
+  type        = string
+  default     = "true"
+}
+
+variable "cache_ttl" {
+  description = "cache ttl"
+  type        = string
+  default     = "60"
+}

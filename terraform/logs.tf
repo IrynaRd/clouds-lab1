@@ -52,12 +52,13 @@ resource "aws_cloudwatch_dashboard" "app_dashboard" {
         properties = {
           metrics = [
             ["AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "LoadBalancer", aws_lb.app_lb.arn_suffix],
+            ["AWS/ApplicationELB", "HTTPCode_ELB_5XX_Count", "LoadBalancer", aws_lb.app_lb.arn_suffix]
           ]
           period = 60
-          view   = "bar"
+          view   = "timeSeries"
           stat   = "Sum"
           region = "eu-central-1"
-          title  = "5XX Target Errors"
+          title  = "5XX Errors"
         }
       },
       {

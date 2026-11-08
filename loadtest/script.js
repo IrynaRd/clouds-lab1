@@ -1,4 +1,3 @@
-
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
@@ -8,9 +7,11 @@ export const options = {
     { duration: '5m', target: 40 },
     { duration: '3m', target: 0 },
   ],
+
+  summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const BASE_URL = "http://...";
+const BASE_URL = "http://localhost:5000";
 
 export function setup() {
   const params = {
