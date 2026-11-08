@@ -1,4 +1,3 @@
-
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
@@ -12,7 +11,7 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const BASE_URL = "http://app-load-balancer-1318946727.eu-central-1.elb.amazonaws.com";
+const BASE_URL = "http://localhost:5000";
 
 export function setup() {
   const params = {
