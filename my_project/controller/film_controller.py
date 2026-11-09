@@ -6,6 +6,7 @@ from my_project.service import film_service
 from my_project.service.film_service import FilmNotFoundException, FilmExistsException
 from my_project.domain.schemas import FilmCreate, FilmUpdate, FilmResponse, ReviewResponse
 from functools import wraps
+from my_project.idempotency import idempotent
 
 film_bp = Blueprint('films', __name__, url_prefix='/films')
 
@@ -20,6 +21,7 @@ def with_db_session(f):
     return wrapper
 
 @film_bp.route('/', methods=['POST'])
+@idempotent
 @with_db_session
 def create_film_endpoint(db: Session):
     """
