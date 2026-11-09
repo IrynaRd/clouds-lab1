@@ -11,16 +11,18 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "http://app-load-balancer-166563433.eu-central-1.elb.amazonaws.com";
 
 export function setup() {
   const params = {
     headers: { 'Content-Type': 'application/json' },
   };
 
+  const runId = Date.now();
+
   const userPayload = {
-    nick_name: 'loadtest_user',
-    email: 'loadtest_user@example.com',
+    nick_name: `loadtest_user_${runId}`,
+    email: `loadtest_user_${runId}@example.com`,
     registration_date: '2020-10-12',
   };
 
@@ -44,9 +46,9 @@ export function setup() {
 
   for (let i = 1; i <= 3; i++) {
     const filmPayload = {
-      title: `Loadtest preparation film ${i}`,
+      title: `Loadtest preparation film ${i} ${runId}`,
       year: '2025',
-      description: `description preparation film ${i}`,
+      description: `description preparation film ${i} ${runId}`,
       budget: '120000.000',
     };
 
@@ -111,11 +113,12 @@ export function setup() {
 }
 
 export default function (data) {
+  const RUN_ID = Date.now();
   const params = {
     headers: { 'Content-Type': 'application/json' },
   };
   const postPayload = {
-    title: `Loadtest film VU-${__VU} ITER-${__ITER}`,
+    title: `Loadtest film ${RUN_ID} VU-${__VU} ITER-${__ITER}`,
     year: '2025',
     description: 'Description Loadtest',
     budget: '12000.000',
@@ -126,6 +129,12 @@ export default function (data) {
     JSON.stringify(postPayload),
     params
   );
+
+  if (createRes.status !== 200 && createRes.status !== 201) {
+    console.error(
+      `Film creation failed: status=${createRes.status}, body=${createRes.body}`
+    );
+  }
 
   const created = check(createRes, {
     'new film created': (r) => r.status === 200 || r.status === 201,
