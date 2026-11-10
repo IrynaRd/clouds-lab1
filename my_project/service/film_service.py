@@ -19,10 +19,19 @@ def create_new_film(db, film_schema):
     return new_film
 
 def get_film_by_id(db, film_id):
+    cache_key = f"films:id:{film_id}"
+    cached = cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     db_film = film_dao.get_film(db, film_id)
     if db_film is None:
         raise FilmNotFoundException("Not found")
-    return db_film
+        
+    film_data = FilmResponse.model_validate(db_film).model_dump()
+    cache_set(cache_key, film_data)
+
+    return film_data
 
 def get_all_films_service(db, skip, limit):
     cache_key = "films:all"
@@ -45,6 +54,7 @@ def update_existing_film(db, film_id, film_update):
     updated = film_dao.update_film(db, db_film, film_update)
 
     cache_delete("films:all")
+    cache_delete(f"films:id:{film_id}")
 
     return updated
 
@@ -56,6 +66,7 @@ def delete_existing_film(db, film_id):
     film_dao.delete_film(db, db_film)
 
     cache_delete("films:all")
+    cache_delete(f"films:id:{film_id}")
 
 def get_film_reviews_service(db, film_id):
     db_film = film_dao.get_film_with_reviews(db, film_id)
