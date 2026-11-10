@@ -9,7 +9,7 @@ CACHE_TTL = int(os.getenv("CACHE_TTL", "60"))
 
 REDIS_URL = os.getenv("REDIS_URL")
 
-if CACHE_ENABLED and REDIS_URL:
+if REDIS_URL:
     redis_client = redis.Redis.from_url(
         REDIS_URL,
         decode_responses = True,
@@ -27,8 +27,8 @@ class DecimalEncoder(json.JSONEncoder):
         return super().default(obj)
 
 def cache_get(key):
-    if redis_client is None:
-        return None
+    if not CACHE_ENABLED or redis_client is None:
+        return
     try:
         data = redis_client.get(key)
         if data is not None:
@@ -39,7 +39,7 @@ def cache_get(key):
 
 
 def cache_set(key, value, ttl=None):
-    if redis_client is None:
+    if not CACHE_ENABLED or redis_client is None:
         return
     if ttl is None:
         ttl = CACHE_TTL
@@ -50,7 +50,7 @@ def cache_set(key, value, ttl=None):
 
 
 def cache_delete(key):
-    if redis_client is None:
+    if not CACHE_ENABLED or redis_client is None:
         return
     try:
         redis_client.delete(key)
