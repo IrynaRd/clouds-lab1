@@ -7,6 +7,7 @@ from my_project.service import user_service
 from my_project.service.user_service import UserNotFoundException, UserExistsException
 from my_project.domain.schemas import UserCreate, UserUpdate, UserResponse, ReviewResponse
 from functools import wraps
+from my_project.idempotency import idempotent
 
 user_bp = Blueprint('users', __name__, url_prefix='/users')
 
@@ -21,6 +22,7 @@ def with_db_session(f):
     return wrapper
 
 @user_bp.route('/', methods=['POST'])
+@idempotent
 @with_db_session
 def create_user_endpoint(db: Session):
     """

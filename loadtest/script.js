@@ -11,14 +11,17 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const BASE_URL = "http://app-load-balancer-166563433.eu-central-1.elb.amazonaws.com";
+const BASE_URL = "http://app-load-balancer-1877027631.eu-central-1.elb.amazonaws.com";
 
 export function setup() {
-  const params = {
-    headers: { 'Content-Type': 'application/json' },
-  };
-
   const runId = Date.now();
+  
+  const userParams = {
+    headers: { 
+      'Content-Type': 'application/json',
+      'Idempotency-Key': `create-user-${runId}` 
+    },
+  };
 
   const userPayload = {
     nick_name: `loadtest_user_${runId}`,
@@ -29,7 +32,7 @@ export function setup() {
   const userRes = http.post(
     `${BASE_URL}/users`,
     JSON.stringify(userPayload),
-    params
+    userParams
   );
 
   check(userRes, {
@@ -43,6 +46,10 @@ export function setup() {
   const userId = userRes.json('id');
 
   const filmIds = [];
+  
+  const params = {
+    headers: { 'Content-Type': 'application/json' },
+  };
 
   for (let i = 1; i <= 3; i++) {
     const filmPayload = {
@@ -51,7 +58,7 @@ export function setup() {
       description: `description preparation film ${i} ${runId}`,
       budget: '120000.000',
     };
-
+    
     const filmRes = http.post(
       `${BASE_URL}/films`,
       JSON.stringify(filmPayload),
@@ -117,6 +124,7 @@ export default function (data) {
   const params = {
     headers: { 'Content-Type': 'application/json' },
   };
+
   const postPayload = {
     title: `Loadtest film ${RUN_ID} VU-${__VU} ITER-${__ITER}`,
     year: '2025',
@@ -152,7 +160,6 @@ export default function (data) {
 
   for (let i = 0; i < 2; i++) {
     const res = http.get(`${BASE_URL}/films`);
-
     check(res, {
       'films list loaded': (r) => r.status === 200,
     });
@@ -168,7 +175,6 @@ export default function (data) {
     const filmId = data.filmIds[i];
 
     res = http.get(`${BASE_URL}/films/${filmId}`);
-
     check(res, {
       'existing film loaded': (r) => r.status === 200,
     });
@@ -180,10 +186,8 @@ export default function (data) {
     'user loaded': (r) => r.status === 200,
   });
 
-
   for (let i = 0; i < 2; i++) {
     const filmId = data.filmIds[i];
-
     res = http.get(`${BASE_URL}/reviews/film/${filmId}`);
 
     check(res, {
