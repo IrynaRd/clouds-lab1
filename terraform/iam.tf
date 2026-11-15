@@ -100,7 +100,9 @@ resource "aws_iam_policy" "github_ecs_policy" {
           "iam:PassRole"
         ],
         Resource = [
-          aws_iam_role.ecs_task_execution_role.arn
+          aws_iam_role.ecs_task_execution_role.arn,
+          aws_iam_role.ecs_api_task_role.arn,
+          aws_iam_role.ecs_worker_task_role.arn
         ]
       },
       {
@@ -121,4 +123,88 @@ resource "aws_iam_policy" "github_ecs_policy" {
 resource "aws_iam_role_policy_attachment" "github_ecs_policy_attachment" {
   role       = aws_iam_role.github_actions_role.name
   policy_arn = aws_iam_policy.github_ecs_policy.arn
+}
+
+# for QUEUE
+# Flask role
+
+resource "aws_iam_role" "ecs_api_task_role" {
+  name = "ecs-api-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "api_sqs_send_policy" {
+  name = "api-sqs-send-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "sqs:SendMessage"
+        Resource = aws_sqs_queue.reviews_queue.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "api_sqs_send" {
+  role       = aws_iam_role.ecs_api_task_role.name
+  policy_arn = aws_iam_policy.api_sqs_send_policy.arn
+}
+
+# Role for Worker
+
+resource "aws_iam_role" "ecs_worker_task_role" {
+  name = "ecs-worker-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "worker_sqs_policy" {
+  name = "worker-sqs-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ChangeMessageVisibility"
+        ]
+        Resource = aws_sqs_queue.reviews_queue.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "worker_sqs" {
+  role       = aws_iam_role.ecs_worker_task_role.name
+  policy_arn = aws_iam_policy.worker_sqs_policy.arn
 }

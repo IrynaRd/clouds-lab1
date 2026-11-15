@@ -14,6 +14,7 @@ resource "aws_ecs_task_definition" "app_task" {
   cpu                      = "256"
   memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_api_task_role.arn
 
   container_definitions = jsonencode([
     {
@@ -51,6 +52,14 @@ resource "aws_ecs_task_definition" "app_task" {
         {
           name  = "APP_PASSWORD"
           value = "${var.app_password}"
+        },
+        {
+          name  = "SQS_QUEUE_URL"
+          value = aws_sqs_queue.reviews_queue.url
+        },
+        {
+          name  = "AWS_REGION"
+          value = "eu-central-1"
         }
       ]
       logConfiguration = {

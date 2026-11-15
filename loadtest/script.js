@@ -11,15 +11,15 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const BASE_URL = "http://app-load-balancer-1877027631.eu-central-1.elb.amazonaws.com";
+const BASE_URL = "http://app-load-balancer-1153180229.eu-central-1.elb.amazonaws.com";
 
 export function setup() {
   const runId = Date.now();
-  
+
   const userParams = {
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
-      'Idempotency-Key': `create-user-${runId}` 
+      'Idempotency-Key': `create-user-${runId}`
     },
   };
 
@@ -46,7 +46,7 @@ export function setup() {
   const userId = userRes.json('id');
 
   const filmIds = [];
-  
+
   const params = {
     headers: { 'Content-Type': 'application/json' },
   };
@@ -58,7 +58,7 @@ export function setup() {
       description: `description preparation film ${i} ${runId}`,
       budget: '120000.000',
     };
-    
+
     const filmRes = http.post(
       `${BASE_URL}/films`,
       JSON.stringify(filmPayload),
@@ -83,44 +83,14 @@ export function setup() {
     filmIds.push(filmId);
   }
 
-  const reviewIds = [];
-
-  for (const filmId of filmIds) {
-    const reviewPayload = {
-      user_id: userId,
-      film_id: filmId,
-      review_text: 'review loadtest preparation',
-      review_date: '2020-12-12',
-    };
-
-    const reviewRes = http.post(
-      `${BASE_URL}/reviews`,
-      JSON.stringify(reviewPayload),
-      params
-    );
-
-    check(reviewRes, {
-      'review created': (r) => r.status === 200 || r.status === 201,
-    });
-
-    if (reviewRes.status !== 200 && reviewRes.status !== 201) {
-      throw new Error(`Review creation failed: ${reviewRes.status} ${reviewRes.body}`);
-    }
-
-    const reviewId = reviewRes.json('id');
-
-    if (reviewId) {
-      reviewIds.push(reviewId);
-    }
-  }
-
   return {
-    userId, filmIds, reviewIds,
+    userId, filmIds
   };
 }
 
 export default function (data) {
   const RUN_ID = Date.now();
+
   const params = {
     headers: { 'Content-Type': 'application/json' },
   };
@@ -158,47 +128,26 @@ export default function (data) {
     return;
   }
 
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 5; i++) {
     const res = http.get(`${BASE_URL}/films`);
+
     check(res, {
       'films list loaded': (r) => r.status === 200,
     });
   }
 
-  let res = http.get(`${BASE_URL}/films/${newFilmId}`);
+  for (const filmId of data.filmIds) {
+    const res = http.get(`${BASE_URL}/films/${filmId}`);
 
-  check(res, {
-    'new film loaded': (r) => r.status === 200,
-  });
-
-  for (let i = 0; i < 2; i++) {
-    const filmId = data.filmIds[i];
-
-    res = http.get(`${BASE_URL}/films/${filmId}`);
     check(res, {
       'existing film loaded': (r) => r.status === 200,
     });
   }
 
-  res = http.get(`${BASE_URL}/users/${data.userId}`);
+  const usersRes = http.get(`${BASE_URL}/users/`);
 
-  check(res, {
-    'user loaded': (r) => r.status === 200,
-  });
-
-  for (let i = 0; i < 2; i++) {
-    const filmId = data.filmIds[i];
-    res = http.get(`${BASE_URL}/reviews/film/${filmId}`);
-
-    check(res, {
-      'film reviews loaded': (r) => r.status === 200,
-    });
-  }
-
-  res = http.get(`${BASE_URL}/reviews/film/${data.filmIds[2]}`);
-
-  check(res, {
-    'film3 reviews loaded': (r) => r.status === 200,
+  check(usersRes, {
+    'users list loaded': (r) => r.status === 200,
   });
 
   sleep(1);

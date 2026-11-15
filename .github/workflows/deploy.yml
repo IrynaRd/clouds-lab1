@@ -10,6 +10,8 @@ env:
   ECS_SERVICE: app-service
   ECS_CLUSTER: app-cluster
   CONTAINER_NAME: api-container
+  WORKER_SERVICE: worker-service
+  WORKER_CONTAINER_NAME: worker-container
 
 permissions:
   contents: read
@@ -69,5 +71,28 @@ jobs:
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
+
+
+    - name: Download Worker task definition
+      run: |
+        aws ecs describe-task-definition \
+          --task-definition worker-task \
+          --query taskDefinition > worker-task-definition.json
+
+    - name: Fill in Worker image
+      id: worker-task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: worker-task-definition.json
+        container-name: ${{ env.WORKER_CONTAINER_NAME }}
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Deploy Worker
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        task-definition: ${{ steps.worker-task-def.outputs.task-definition }}
+        service: ${{ env.WORKER_SERVICE }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
