@@ -11,7 +11,7 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const BASE_URL = "http://app-load-balancer-1731186824.eu-central-1.elb.amazonaws.com";
+const BASE_URL = "http://app-load-balancer-1153180229.eu-central-1.elb.amazonaws.com";
 
 export function setup() {
   const runId = Date.now();

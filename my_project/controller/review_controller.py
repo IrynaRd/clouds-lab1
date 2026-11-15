@@ -14,9 +14,22 @@ from my_project.domain.schemas import ReviewCreate, ReviewUpdate, ReviewResponse
 
 from my_project.domain.schemas import FilmWithReviewsResponse
 
+import os
+import json
+import logging
+import boto3
 
+logger = logging.getLogger(__name__)
 
 review_bp = Blueprint('reviews', __name__, url_prefix='/reviews')
+
+SQS_QUEUE_URL = os.environ.get("SQS_QUEUE_URL")
+AWS_REGION = os.environ.get("AWS_REGION", "eu-central-1")
+
+if SQS_QUEUE_URL:
+    sqs_client = boto3.client("sqs", region_name=AWS_REGION)
+else:
+    sqs_client = None
 
 def with_db_session(f):
     def wrapper(*args, **kwargs):
@@ -29,13 +42,39 @@ def with_db_session(f):
     return wrapper
 
 @review_bp.route('/', methods=['POST'])
-@with_db_session
-def create_review_endpoint(db: Session):
+def create_review_endpoint():
+    """Send review creation request to SQS queue or fallback to DB."""
     try:
         review_schema = ReviewCreate.model_validate(request.json)
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
+
+    if sqs_client and SQS_QUEUE_URL:
+        try:
+            message_body = {
+                "film_id": review_schema.film_id,
+                "user_id": review_schema.user_id,
+                "review_text": review_schema.review_text,
+                "review_date": review_schema.review_date.isoformat(),
+            }
+            sqs_client.send_message(
+                QueueUrl=SQS_QUEUE_URL,
+                MessageBody=json.dumps(message_body),
+            )
+            return jsonify({
+                "message": "Review accepted for processing",
+                "film_id": review_schema.film_id,
+                "user_id": review_schema.user_id,
+            }), 202, {
+                "Location": f"/reviews/film/{review_schema.film_id}/user/{review_schema.user_id}"
+            }
+        except Exception as e:
+            logger.exception("Failed to send message to SQS: %s", e)
+            return jsonify({"error": "Failed to queue review"}), 500
+
+    logger.info("SQS is not configured. Falling back to direct DB write.")
     
+    db = next(get_db())
     try:
         new_review = review_service.create_new_review(db, review_schema)
         return jsonify(ReviewResponse.model_validate(new_review).model_dump()), 201
@@ -43,7 +82,11 @@ def create_review_endpoint(db: Session):
         return jsonify({"error": str(e)}), 404
     except ReviewExistsException as e:
         return jsonify({"error": str(e)}), 409
-
+    except Exception as e:
+        logger.exception("Failed to write review to DB: %s", e)
+        return jsonify({"error": "Failed to create review"}), 500
+    finally:
+        db.close()
 
 @review_bp.route('/film/<int:film_id>/user/<int:user_id>', methods=['GET'])
 @with_db_session

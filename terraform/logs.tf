@@ -44,7 +44,19 @@ resource "aws_cloudwatch_dashboard" "app_dashboard" {
           period = 60
           stat   = "Sum"
           region = "eu-central-1"
-          title  = "Request Count"
+          title  = "ALB — Request Count"
+        }
+      },
+      {
+        type = "metric", x = 12, y = 6, width = 12, height = 6
+        properties = {
+          metrics = [
+            ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", aws_lb.app_lb.arn_suffix, { stat = "p95" }],
+          ]
+          period = 60
+          stat   = "Average"
+          region = "eu-central-1"
+          title  = "Target Response Time p95"
         }
       },
       {
@@ -62,15 +74,29 @@ resource "aws_cloudwatch_dashboard" "app_dashboard" {
         }
       },
       {
-        type = "metric", x = 12, y = 6, width = 12, height = 6
+        type = "metric", x = 0, y = 18, width = 12, height = 6
         properties = {
           metrics = [
-            ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", aws_lb.app_lb.arn_suffix, { stat = "p95" }],
+            ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", aws_sqs_queue.reviews_queue.name],
+            ["AWS/SQS", "ApproximateNumberOfMessagesNotVisible", "QueueName", aws_sqs_queue.reviews_queue.name]
+          ]
+          period = 60
+          stat   = "Maximum"
+          region = "eu-central-1"
+          title  = "SQS - Messages in Queue"
+        }
+      },
+      {
+        type = "metric", x = 12, y = 18, width = 12, height = 6
+        properties = {
+          metrics = [
+            ["ECS/ContainerInsights", "DesiredTaskCount", "ClusterName", aws_ecs_cluster.app_cluster.name, "ServiceName", aws_ecs_service.worker_service.name],
+            ["ECS/ContainerInsights", "RunningTaskCount", "ClusterName", aws_ecs_cluster.app_cluster.name, "ServiceName", aws_ecs_service.worker_service.name]
           ]
           period = 60
           stat   = "Average"
           region = "eu-central-1"
-          title  = "Target Response Time p95"
+          title  = "Worker - Desired & Running Tasks"
         }
       }
     ]
