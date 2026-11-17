@@ -53,10 +53,10 @@ resource "aws_ecs_task_definition" "app_task" {
           name  = "APP_PASSWORD"
           value = "${var.app_password}"
         },
-        {
-          name  = "SQS_QUEUE_URL"
-          value = aws_sqs_queue.reviews_queue.url
-        },
+        # {
+        #   name  = "SQS_QUEUE_URL"
+        #   value = aws_sqs_queue.reviews_queue.url
+        # },
         {
           name  = "AWS_REGION"
           value = "eu-central-1"

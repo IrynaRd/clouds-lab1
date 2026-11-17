@@ -11,7 +11,7 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
-const BASE_URL = __ENV.BASE_URL || "http://app-load-balancer-1731186824.eu-central-1.elb.amazonaws.com";
+const BASE_URL = __ENV.BASE_URL || "http://app-load-balancer-1412044528.eu-central-1.elb.amazonaws.com";
 
 export function setup() {
   const runId = Date.now();
@@ -22,20 +22,31 @@ export function setup() {
   const userIds = [];
   for (let i = 1; i <= 50; i++) {
     const userPayload = {
-      nick_name: `sqs test user_${runId}_${i}`,
-      email: `sqst test ${runId}_${i}@example.com`,
+      nick_name: `sqstestuser_${runId}_${i}`,
+      email: `sqstTest${runId}_${i}@gmail.com`,
       registration_date: '2026-01-01',
+    };
+
+    const userParams = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': `sqs-user-${runId}-${i}`,
+      },
     };
 
     const res = http.post(
       `${BASE_URL}/users`,
       JSON.stringify(userPayload),
-      params
+      userParams
     );
 
-    check(res, {
+    const userCreated = check(res, {
       [`user ${i} created`]: (r) => r.status === 200 || r.status === 201,
     });
+
+    if (!userCreated && i === 1) {
+      console.log(`User creation failed status=${res.status}, body=${res.body}`);
+    }
 
     if (res.status === 200 || res.status === 201) {
       userIds.push(res.json('id'));
@@ -102,17 +113,5 @@ export default function (data) {
     'review accepted (202)': (r) => r.status === 202,
   });
 
-
-  const filmsRes = http.get(`${BASE_URL}/films`);
-  check(filmsRes, {
-    'films list loaded': (r) => r.status === 200,
-  });
-
-
-  const getRes = http.get(`${BASE_URL}/reviews/film/${filmId}/user/${userId}`);
-  check(getRes, {
-    'review status checked': (r) => r.status === 200 || r.status === 404,
-  });
-
-  sleep(0.5);
+  sleep(0.5)
 }

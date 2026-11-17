@@ -113,7 +113,8 @@ resource "aws_iam_policy" "github_ecs_policy" {
           "ecs:DescribeServices"
         ],
         Resource = [
-          aws_ecs_service.app_service.id
+          aws_ecs_service.app_service.id,
+          aws_ecs_service.worker_service.id
         ]
       }
     ]
